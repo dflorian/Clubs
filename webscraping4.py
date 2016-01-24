@@ -16,7 +16,7 @@ for row in elems.find_all(class_='clearfix'):
 		address = row.find(class_='fl grey mobile-off').contents[0]
 
 		### finding the geo_loc
-		geo_loc = requests.get('http://www.mapquestapi.com/geocoding/v1/address?key=MSJ6rAyYJeKQdpYsUqkqbaAAGH6y5VFK&location=%s&callback=renderGeocode' % (address), timeout=0.03)
+		geo_loc = requests.get('http://www.mapquestapi.com/geocoding/v1/address?key=xxxx&location=%s&callback=renderGeocode' % (address), timeout=0.03)
 		geo_loc.raise_for_status
 
 		playFile.write(name + " ! " + address + " ! " + geo_loc + '\n')
