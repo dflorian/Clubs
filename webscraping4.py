@@ -1,24 +1,30 @@
-#! python2.7
+#! /usr/bin/python3
+import json
 import requests, bs4
-from bs4 import BeautifulSoup
+import urllib.parse, urllib.request
+import secrets
 
 res = requests.get('http://www.residentadvisor.net/clubs.aspx')
 res.raise_for_status()
 
-#### scraping page
+#### scraping page for clubs names
 clubSoup = bs4.BeautifulSoup(res.text,'html.parser')
 elems = clubSoup.find(class_='fl col4-6')
-playFile = open('Clubs.txt', 'wb')
+
+all_addresses = []
 
 for row in elems.find_all(class_='clearfix'):
-	if row.find(class_='fl grey mobile-off').contents:
-		name = row.find('a').contents[0]
-		address = row.find(class_='fl grey mobile-off').contents[0]
+        if row.find(class_='fl grey mobile-off').contents:
+                name = row.find('a').contents[0]
+                address = row.find(class_='fl grey mobile-off').contents[0]
+                all_addresses.append((name, address))
 
-		### finding the geo_loc
-		geo_loc = requests.get('http://www.mapquestapi.com/geocoding/v1/address?key=xxxx&location=%s&callback=renderGeocode' % (address), timeout=0.03)
-		geo_loc.raise_for_status
+### calling mapquest to obtain geoloc
+playFile = open('Clubs.txt', 'w')
+for address in all_addresses:
+        enc_address = urllib.parse.quote(address[1], "utf-8")
+        with urllib.request.urlopen('http://www.mapquestapi.com/geocoding/v1/address?key=%s&location=%s' % (secrets.mapquest_key, enc_address)) as geo_loc:
+                obj = json.loads(geo_loc.read().decode("utf-8"))
+                ll = obj["results"][0]["locations"][0]["displayLatLng"]
+                playFile.write(address[0] + " ! " + address[1] + " ! " + str(ll["lat"]) + " ! " + str(ll["lng"]) + '\n')
 
-		playFile.write(name + " ! " + address + " ! " + geo_loc + '\n')
-
-playFile.close()
